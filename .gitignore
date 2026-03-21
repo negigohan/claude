@@ -1,0 +1,13 @@
+# Node modules (if any)
+node_modules/
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Browser
+*.crx

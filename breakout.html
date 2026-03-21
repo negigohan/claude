@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Breakout - ブロック崩し</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #1a1a2e;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: 'Arial', sans-serif;
+            color: white;
+        }
+
+        #gameContainer {
+            text-align: center;
+        }
+
+        canvas {
+            background-color: #0f0f1a;
+            border: 4px solid #4ecca3;
+            box-shadow: 0 0 20px rgba(78, 204, 163, 0.3);
+            display: block;
+            margin: 0 auto;
+        }
+
+        .instructions {
+            margin-top: 15px;
+            color: #888;
+        }
+
+        #gameOver, #win {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 40px;
+            border-radius: 10px;
+            text-align: center;
+            display: none;
+        }
+
+        button {
+            background-color: #4ecca3;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            color: #1a1a2e;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        button:hover {
+            background-color: #3db591;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <div class="instructions">移動: マウスまたは矢印キー | スタート: クリックまたはスペース</div>
+    </div>
+
+    <div id="gameOver">
+        <h1>GAME OVER</h1>
+        <p>あなたのスコア: <span id="finalScore">0</span></p>
+        <button onclick="resetGame()">再挑戦</button>
+    </div>
+
+    <div id="win">
+        <h1>YOU WIN!</h1>
+        <p>あなたのスコア: <span id="winScore">0</span></p>
+        <button onclick="resetGame()">もう一度</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // ゲームの状態
+        let gameRunning = false;
+        let score = 0;
+        let isGameOver = false;
+        let isWin = false;
+
+        // パドル
+        const paddle = {
+            width: 120,
+            height: 15,
+            x: canvas.width / 2 - 60,
+            y: canvas.height - 30,
+            speed: 8,
+            dx: 0,
+            color: '#4ecca3'
+        };
+
+        // ボール
+        const ball = {
+            x: canvas.width / 2,
+            y: canvas.height - 50,
+            radius: 8,
+            speed: 5,
+            dx: 4,
+            dy: -4,
+            color: '#ff6b6b'
+        };
+
+        // ブロック
+        const blockConfig = {
+            rows: 6,
+            cols: 10,
+            padding: 8,
+            offsetTop: 60,
+            offsetLeft: 35,
+            height: 25,
+            width: 70
+        };
+
+        let blocks = [];
+
+        // キー入力
+        const keys = {
+            ArrowRight: false,
+            ArrowLeft: false
+        };
+
+        // ブロックの初期化
+        function initBlocks() {
+            blocks = [];
+            const colors = ['#ff6b6b', '#feca57', '#48dbfb', '#ff9ff3', '#54a0ff', '#5f27cd'];
+
+            for (let r = 0; r < blockConfig.rows; r++) {
+                blocks[r] = [];
+                for (let c = 0; c < blockConfig.cols; c++) {
+                    blocks[r][c] = {
+                        x: 0,
+                        y: 0,
+                        status: 1,
+                        color: colors[r % colors.length]
+                    };
+                }
+            }
+        }
+
+        // パドルの描画
+        function drawPaddle() {
+            ctx.fillStyle = paddle.color;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = paddle.color;
+            ctx.fillRect(paddle.x, paddle.y, paddle.width, paddle.height);
+            ctx.shadowBlur = 0;
+        }
+
+        // ボールの描画
+        function drawBall() {
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+            ctx.fillStyle = ball.color;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = ball.color;
+            ctx.fill();
+            ctx.closePath();
+            ctx.shadowBlur = 0;
+        }
+
+        // ブロックの描画
+        function drawBlocks() {
+            let activeBlocks = 0;
+
+            for (let r = 0; r < blockConfig.rows; r++) {
+                for (let c = 0; c < blockConfig.cols; c++) {
+                    const b = blocks[r][c];
+                    if (b.status === 1) {
+                        activeBlocks++;
+                        b.x = c * (blockConfig.width + blockConfig.padding) + blockConfig.offsetLeft;
+                        b.y = r * (blockConfig.height + blockConfig.padding) + blockConfig.offsetTop;
+
+                        ctx.fillStyle = b.color;
+                        ctx.shadowBlur = 5;
+                        ctx.shadowColor = b.color;
+                        ctx.fillRect(b.x, b.y, blockConfig.width, blockConfig.height);
+                        ctx.shadowBlur = 0;
+
+                        // ブロックの上部に辉き
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+                        ctx.fillRect(b.x, b.y, blockConfig.width, blockConfig.height / 2);
+                    }
+                }
+            }
+
+            return activeBlocks;
+        }
+
+        // スコアの描画
+        function drawScore() {
+            ctx.fillStyle = '#fff';
+            ctx.font = '20px Arial';
+            ctx.fillText('Score: ' + score, 20, 35);
+        }
+
+        // ライフの描画
+        let lives = 3;
+        function drawLives() {
+            ctx.fillStyle = '#ff6b6b';
+            ctx.font = '20px Arial';
+            ctx.fillText('Lives: ' + lives, canvas.width - 100, 35);
+        }
+
+        // 衝突判定
+        function collisionDetection() {
+            for (let r = 0; r < blockConfig.rows; r++) {
+                for (let c = 0; c < blockConfig.cols; c++) {
+                    const b = blocks[r][c];
+                    if (b.status === 1) {
+                        if (ball.x > b.x && ball.x < b.x + blockConfig.width &&
+                            ball.y > b.y && ball.y < b.y + blockConfig.height) {
+                            ball.dy = -ball.dy;
+                            b.status = 0;
+                            score += 10;
+                            // ボールの速度を少しずつ上げる
+                            if (score % 50 === 0) {
+                                ball.speed += 0.5;
+                                ball.dx = ball.dx > 0 ? ball.speed : -ball.speed;
+                                ball.dy = ball.dy > 0 ? ball.speed : -ball.speed;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // パドルとの衝突判定
+        function paddleCollision() {
+            if (ball.x > paddle.x && ball.x < paddle.x + paddle.width &&
+                ball.y + ball.radius >= paddle.y && ball.y - ball.radius <= paddle.y + paddle.height) {
+
+                // パドルのどこに当たったかで角度を変える
+                const hitPoint = ball.x - (paddle.x + paddle.width / 2);
+                const normalizedHit = hitPoint / (paddle.width / 2);
+
+                ball.dx = normalizedHit * 5;
+                ball.dy = -Math.abs(ball.dy);
+                ball.speed += 0.2;
+
+                // 速度の上限
+                if (ball.speed > 12) ball.speed = 12;
+                ball.dx = ball.dx > 0 ? ball.speed : -ball.speed;
+                ball.dy = ball.dy > 0 ? ball.speed : -ball.speed;
+            }
+        }
+
+        // ボールの更新
+        function updateBall() {
+            ball.x += ball.dx;
+            ball.y += ball.dy;
+
+            // 壁の衝突
+            if (ball.x + ball.radius > canvas.width || ball.x - ball.radius < 0) {
+                ball.dx = -ball.dx;
+            }
+            if (ball.y - ball.radius < 0) {
+                ball.dy = -ball.dy;
+            }
+
+            // ボールが画面外に出た場合
+            if (ball.y + ball.radius > canvas.height) {
+                lives--;
+                if (lives <= 0) {
+                    gameOver();
+                } else {
+                    resetBall();
+                }
+            }
+        }
+
+        // ボールのリセット
+        function resetBall() {
+            ball.x = canvas.width / 2;
+            ball.y = canvas.height - 50;
+            ball.speed = 5;
+            ball.dx = 4;
+            ball.dy = -4;
+            paddle.x = canvas.width / 2 - paddle.width / 2;
+        }
+
+        // パドルの更新
+        function updatePaddle() {
+            if (keys.ArrowRight && paddle.x + paddle.width < canvas.width) {
+                paddle.x += paddle.speed;
+            }
+            if (keys.ArrowLeft && paddle.x > 0) {
+                paddle.x -= paddle.speed;
+            }
+        }
+
+        // ゲームオーバー
+        function gameOver() {
+            isGameOver = true;
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('gameOver').style.display = 'block';
+            gameRunning = false;
+        }
+
+        // ゲームクリア
+        function gameWin() {
+            isWin = true;
+            document.getElementById('winScore').textContent = score;
+            document.getElementById('win').style.display = 'block';
+            gameRunning = false;
+        }
+
+        // メインゲームループ
+        function gameLoop() {
+            if (!gameRunning) return;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            drawBlocks();
+            const remainingBlocks = drawBlocks();
+            drawPaddle();
+            drawBall();
+            drawScore();
+            drawLives();
+
+            collisionDetection();
+            paddleCollision();
+            updateBall();
+            updatePaddle();
+
+            if (remainingBlocks === 0) {
+                gameWin();
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // リセット
+        function resetGame() {
+            score = 0;
+            lives = 3;
+            isGameOver = false;
+            isWin = false;
+            gameRunning = true;
+
+            document.getElementById('gameOver').style.display = 'none';
+            document.getElementById('win').style.display = 'none';
+
+            initBlocks();
+            resetBall();
+            gameLoop();
+        }
+
+        // イベントリスナー
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') keys.ArrowRight = true;
+            if (e.key === 'ArrowLeft') keys.ArrowLeft = true;
+            if (e.code === 'Space' && !gameRunning && !isGameOver && !isWin) {
+                resetGame();
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'ArrowRight') keys.ArrowRight = false;
+            if (e.key === 'ArrowLeft') keys.ArrowLeft = false;
+        });
+
+        // マウス操作
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            paddle.x = mouseX - paddle.width / 2;
+
+            // 画面外に出ないように制限
+            if (paddle.x < 0) paddle.x = 0;
+            if (paddle.x + paddle.width > canvas.width) paddle.x = canvas.width - paddle.width;
+        });
+
+        canvas.addEventListener('click', () => {
+            if (!gameRunning && !isGameOver && !isWin) {
+                resetGame();
+            }
+        });
+
+        // 初期化
+        initBlocks();
+        drawBlocks();
+        drawPaddle();
+        drawBall();
+        drawScore();
+        drawLives();
+
+        // スタート画面の表示
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#fff';
+        ctx.font = '48px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('BREAKOUT', canvas.width / 2, canvas.height / 2 - 50);
+        ctx.font = '24px Arial';
+        ctx.fillText('クリックしてスタート', canvas.width / 2, canvas.height / 2 + 10);
+        ctx.textAlign = 'left';
+    </script>
+</body>
+</html>

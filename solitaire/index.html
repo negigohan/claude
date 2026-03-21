@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>クロンダイク・ソリティア</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="game-container">
+        <header class="header">
+            <h1>クロンダイク・ソリティア</h1>
+            <div class="controls">
+                <button id="new-game-btn">新しいゲーム</button>
+                <div class="stats">
+                    <span>勝利: <span id="wins">0</span></span>
+                    <span>敗北: <span id="losses">0</span></span>
+                </div>
+            </div>
+        </header>
+
+        <div class="game-board">
+            <!-- 上部: 残りカードとドンプ -->
+            <div class="top-row">
+                <div class="stock" id="stock">
+                    <div class="card-back"></div>
+                    <span class="count"></span>
+                </div>
+                <div class="waste-pile" id="waste"></div>
+                <div class="foundation-container">
+                    <div class="foundation" data-suit="h" id="foundation-h">
+                        <div class="suit-symbol">♥</div>
+                    </div>
+                    <div class="foundation" data-suit="d" id="foundation-d">
+                        <div class="suit-symbol">♦</div>
+                    </div>
+                    <div class="foundation" data-suit="c" id="foundation-c">
+                        <div class="suit-symbol">♣</div>
+                    </div>
+                    <div class="foundation" data-suit="s" id="foundation-s">
+                        <div class="suit-symbol">♠</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 下部: テーブルau -->
+            <div class="tableau-container">
+                <div class="tableau-column" data-col="0" id="tableau-0"></div>
+                <div class="tableau-column" data-col="1" id="tableau-1"></div>
+                <div class="tableau-column" data-col="2" id="tableau-2"></div>
+                <div class="tableau-column" data-col="3" id="tableau-3"></div>
+                <div class="tableau-column" data-col="4" id="tableau-4"></div>
+                <div class="tableau-column" data-col="5" id="tableau-5"></div>
+                <div class="tableau-column" data-col="6" id="tableau-6"></div>
+            </div>
+        </div>
+
+        <div class="message-overlay" id="message-overlay">
+            <div class="message-content">
+                <h2 id="message-title"></h2>
+                <p id="message-text"></p>
+                <button id="message-close">閉じる</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
