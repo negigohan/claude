@@ -47,3 +47,9 @@ This repository contains two HTML5 browser-based games:
 ## Development
 
 No build tools required. Both games are pure HTML/CSS/JavaScript and run directly in browsers.
+
+**Running:**
+- **VS Code:** Install the "Live Server" extension, right-click `index.html` or `breakout.html`, and select "Open with Live Server"
+- **Manual:** Open HTML files directly in a browser (drag-and-drop or file://)
+
+**Note on Solitaire implementation:** The `dealCards()` and `restoreStock()` methods had historical bugs (incorrect loop bounds, deck being emptied prematurely). If cards are not appearing correctly, verify these methods are functioning properly.

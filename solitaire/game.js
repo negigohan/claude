@@ -206,8 +206,10 @@ class SolitaireGame {
 
             // カードの元の位置を取得
             const rect = cardEl.getBoundingClientRect();
-            dragOffsetX = e.clientX - rect.left;
-            dragOffsetY = e.clientY - rect.top;
+            const cardCenterX = rect.left + rect.width / 2;
+            const cardCenterY = rect.top + rect.height / 2;
+            dragOffsetX = e.clientX - cardCenterX;
+            dragOffsetY = e.clientY - cardCenterY;
 
             this.dragStartPos = { x: e.clientX, y: e.clientY };
 
@@ -255,27 +257,22 @@ class SolitaireGame {
     handleMouseMove(e) {
         if (this.draggedCards.length === 0) return;
 
-        // マウスの移動量を計算
+        // マウスの移動量を計算（マウスダウン時からの累積移動量）
         const dx = e.clientX - this.dragStartPos.x;
         const dy = e.clientY - this.dragStartPos.y;
 
         const cardEls = document.querySelectorAll('.card.dragging');
         console.log('MouseMove:', { dx, dy, cardElsLength: cardEls.length });
-        console.log('  draggedCards:', this.draggedCards.map(c => c.id));
 
         // 全てのdraggingカードにtransformを適用
         cardEls.forEach((el, i) => {
-            // カードの元のtop位置を取得
-            const originalTop = parseFloat(el.style.top) || 0;
             const offset = i * 25; // カードの重なり
 
-            // absolute positioningなので、dragStartPosからの相対位置を計算
-            // + dragOffsetX, dragOffsetY でマウスダウンした位置からの相対位置に
+            // マウスダウン時の位置からの相対位置にカードを移動
+            // dragOffsetX, dragOffsetYはマウスダウン位置相对于するカードの位置オフセット
             el.style.transform = `translate(${dragOffsetX + dx}px, ${dragOffsetY + dy + offset}px)`;
             el.style.zIndex = 1000 + i;
         });
-
-        this.dragStartPos = { x: e.clientX, y: e.clientY };
     }
 
     handleMouseUp(e) {
