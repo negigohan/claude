@@ -7,6 +7,7 @@ const HAND_EMOJI = { G: '✊', C: '✋', P: '🖐' };
 let state = 'idle'; // idle | waiting_llm | choosing | result
 let llmHand = null; // cached LLM response
 let history = [];   // [{llm: 'G', player: 'C', result: 'win'}, ...]
+let prefetchPromise = null; // pending pre-fetch promise
 
 // Screen elements
 const screens = {
@@ -113,9 +114,12 @@ function onPlayerChoose(hand) {
   showScreen('result');
 
   // Pre-fetch next LLM response in background
-  queryLLM(buildPrompt()).then(hand => {
+  prefetchPromise = queryLLM(buildPrompt()).then(hand => {
     llmHand = hand;
-    state = 'choosing'; // ready for next round
+    prefetchPromise = null;
+    if (state === 'result') {
+      state = 'choosing';
+    }
   });
 }
 
@@ -140,12 +144,22 @@ function retryGame() {
     return;
   }
 
+  if (prefetchPromise) {
+    // Pre-fetch is running, wait for it
+    prefetchPromise.then(() => {
+      state = 'choosing';
+      showScreen('choice');
+    });
+    return;
+  }
+
   // Need fresh LLM response
   state = 'waiting_llm';
   showScreen('thinking');
 
-  queryLLM(buildPrompt()).then(hand => {
+  prefetchPromise = queryLLM(buildPrompt()).then(hand => {
     llmHand = hand;
+    prefetchPromise = null;
     state = 'choosing';
     showScreen('choice');
   });
