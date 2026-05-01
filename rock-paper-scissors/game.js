@@ -46,28 +46,35 @@ async function queryLLM(prompt) {
 
 function buildPrompt() {
   if (history.length === 0) {
-    return 'じゃんけんを行う。G(グー),C(チョキ),P(パー)のいずれかを完全にランダムに選び、その文字1つだけ出力せよ。パターンを作らず、偏りなくランダムに選べ';
+    return `じゃんけんを行う。グー(=G), チョキ(=C), パー(=P)のいずれかを完全にランダムに選び、G,C,Pの文字1つだけ出力せよ。
+じゃんけんのルール: グーはチョキに勝ち、チョキはパーに勝ち、パーはグーに勝つ
+パターンを作らず、偏りなくランダムに選べ`;
   }
-  const historyJson = history.map(h => ({ llm: h.llm, player: h.player, result: h.result }));
+  const historyJson = history.map(h => ({
+    llm: HAND_NAMES[h.llm],
+    player: HAND_NAMES[h.player],
+    result: h.result === 'win' ? 'WIN' : h.result === 'lose' ? 'LOSE' : 'DRAW',
+  }));
   return `じゃんけんを行う。過去の結果:${JSON.stringify(historyJson)}
-resultはLLM視点(WIN=勝ち, LOSE=負け, DRAW=引き分け)である。
-過去にWINの手を多用し、LOSEの手は避け、DRAWの手は適度に使い、G,C,Pから選び1つだけ出力せよ`;
+resultはあなたの視点(WIN=あなたの勝ち, LOSE=あなたの負け, DRAW=引き分け)である。
+過去にWINになった手を多用し、LOSEになった手は避け、DRAWになった手は適度に使い、G,C,Pから選び1つだけ出力せよ`;
 }
 
-// Determine winner: returns 'win', 'lose', or 'draw'
+// Determine winner: returns 'win', 'lose', or 'draw' (from LLM's perspective)
 function determineResult(llm, player) {
   if (llm === player) return 'draw';
-  if ((llm === 'G' && player === 'C') ||
-      (llm === 'C' && player === 'P') ||
-      (llm === 'P' && player === 'G')) {
+  if ((llm === 'G' && player === 'P') ||
+      (llm === 'C' && player === 'G') ||
+      (llm === 'P' && player === 'C')) {
     return 'lose';
   }
   return 'win';
 }
 
 function resultText(result) {
-  if (result === 'win') return '🎉 勝ち！';
-  if (result === 'lose') return '💪 LLMの勝ち！';
+  // result is from LLM's perspective, display from player's perspective
+  if (result === 'win') return '💪 LLMの勝ち！';
+  if (result === 'lose') return '🎉 勝ち！';
   return '🤝 引き分け！';
 }
 
