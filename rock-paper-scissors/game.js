@@ -1,7 +1,7 @@
 const LLAMA_SERVER = 'http://127.0.0.1:8080/v1/chat/completions';
 
 const HAND_NAMES = { G: 'グー', C: 'チョキ', P: 'パー' };
-const HAND_EMOJI = { G: '✊', C: '✋', P: '🖐' };
+const HAND_EMOJI = { G: '✊', C: '✌', P: '🖐' };
 
 // Game state
 let state = 'idle'; // idle | waiting_llm | choosing | result
@@ -144,8 +144,11 @@ function retryGame() {
     return;
   }
 
+  state = 'waiting_llm';
+  showScreen('thinking');
+
   if (prefetchPromise) {
-    // Pre-fetch is running, wait for it
+    // Pre-fetch is running, wait for it (no new request sent)
     prefetchPromise.then(() => {
       state = 'choosing';
       showScreen('choice');
@@ -154,9 +157,6 @@ function retryGame() {
   }
 
   // Need fresh LLM response
-  state = 'waiting_llm';
-  showScreen('thinking');
-
   prefetchPromise = queryLLM(buildPrompt()).then(hand => {
     llmHand = hand;
     prefetchPromise = null;
