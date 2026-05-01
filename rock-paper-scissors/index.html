@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>じゃんけんゲーム (vs ローカルLLM)</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <h1>🤖 じゃんけんゲーム</h1>
+    <p class="subtitle">ローカルLLMと対戦しよう！</p>
+
+    <!-- Start Screen -->
+    <div id="start-screen" class="screen active">
+      <button id="start-btn">スタート</button>
+    </div>
+
+    <!-- Thinking Screen -->
+    <div id="thinking-screen" class="screen">
+      <div class="thinking">
+        <div class="spinner"></div>
+        <p>LLMが考えています...</p>
+      </div>
+    </div>
+
+    <!-- Choice Screen -->
+    <div id="choice-screen" class="screen">
+      <p>你的手を選択してください</p>
+      <div class="hand-buttons">
+        <button id="g-btn" data-hand="G">✊ グー</button>
+        <button id="c-btn" data-hand="C">✋ チョキ</button>
+        <button id="p-btn" data-hand="P">🖐 パー</button>
+      </div>
+    </div>
+
+    <!-- Result Screen -->
+    <div id="result-screen" class="screen">
+      <div class="result-display">
+        <div class="hand-pair">
+          <div>
+            <p class="label">LLMの手</p>
+            <p id="llm-hand" class="hand-result"></p>
+          </div>
+          <div class="vs">VS</div>
+          <div>
+            <p class="label">你的手</p>
+            <p id="player-hand" class="hand-result"></p>
+          </div>
+        </div>
+        <p id="result-text" class="result-text"></p>
+        <div id="history" class="history"></div>
+        <button id="retry-btn">もう一度対戦</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
