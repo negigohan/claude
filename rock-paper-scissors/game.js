@@ -36,7 +36,12 @@ async function queryLLM(prompt) {
   });
 
   const data = await response.json();
-  const text = data.choices[0].message.content.trim();
+  console.log('[debug] full response:', JSON.stringify(data, null, 2));
+  console.log('[debug] choices:', data.choices);
+  console.log('[debug] choice[0]:', data.choices ? data.choices[0] : 'no choices');
+  console.log('[debug] message:', data.choices ? data.choices[0]?.message : 'no message');
+
+  const text = (data.choices?.[0]?.message?.content || '').trim();
   // Parse: extract G, C, or P from response
   const match = text.match(/[GCP]/);
   const hand = match ? match[0] : 'G'; // fallback to G if unparseable
