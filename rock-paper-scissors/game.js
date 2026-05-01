@@ -6,7 +6,7 @@ const HAND_EMOJI = { G: '✊', C: '✋', P: '🖐' };
 // Game state
 let state = 'idle'; // idle | waiting_llm | choosing | result
 let llmHand = null; // cached LLM response
-let history = [];   // [{llm: 'G', player: 'C'}, ...]
+let history = [];   // [{llm: 'G', player: 'C', result: 'win'}, ...]
 
 // Screen elements
 const screens = {
@@ -23,13 +23,14 @@ function showScreen(name) {
 
 // LLM communication
 async function queryLLM(prompt) {
+  console.log('[→ LLM prompt]', prompt);
   const response = await fetch(LLAMA_SERVER, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: 'llama',
       messages: [{ role: 'user', content: prompt }],
-      temperature: 0.5,
+      temperature: 1.0,
       max_tokens: 5,
     }),
   });
@@ -38,15 +39,19 @@ async function queryLLM(prompt) {
   const text = data.choices[0].message.content.trim();
   // Parse: extract G, C, or P from response
   const match = text.match(/[GCP]/);
-  return match ? match[0] : 'G'; // fallback to G if unparseable
+  const hand = match ? match[0] : 'G'; // fallback to G if unparseable
+  console.log('[← LLM response]', text, '→ parsed:', hand);
+  return hand;
 }
 
 function buildPrompt() {
   if (history.length === 0) {
-    return 'G,C,Pいずれかを出力';
+    return 'じゃんけんを行う。G(グー),C(チョキ),P(パー)のいずれかを完全にランダムに選び、その文字1つだけ出力せよ。パターンを作らず、偏りなくランダムに選べ';
   }
-  const historyJson = history.map(h => ({ llm: h.llm, player: h.player }));
-    return `じゃんけん結果の辞書型配列:${JSON.stringify(historyJson)}をもとにG,C,Pいずれかを出力`;
+  const historyJson = history.map(h => ({ llm: h.llm, player: h.player, result: h.result }));
+  return `じゃんけんを行う。過去の結果:${JSON.stringify(historyJson)}
+resultはLLM視点(WIN=勝ち, LOSE=負け, DRAW=引き分け)である。
+過去にWINの手を多用し、LOSEの手は避け、DRAWの手は適度に使い、G,C,Pから選び1つだけ出力せよ`;
 }
 
 // Determine winner: returns 'win', 'lose', or 'draw'
@@ -82,7 +87,7 @@ function onPlayerChoose(hand) {
   if (state !== 'choosing') return;
 
   const result = determineResult(llmHand, hand);
-  history.push({ llm: llmHand, player: hand });
+  history.push({ llm: llmHand, player: hand, result });
 
   // Update result display
   document.getElementById('llm-hand').textContent =
@@ -114,8 +119,7 @@ function updateHistoryDisplay() {
     return;
   }
   const items = history.map((h, i) => {
-    const r = determineResult(h.llm, h.player);
-    const rText = resultText(r).replace(/[🎉💪🤝]/g, '').trim();
+    const rText = resultText(h.result).replace(/[🎉💪🤝]/g, '').trim();
     return `<li>Round ${i + 1}: LLM=${HAND_NAMES[h.llm]} vs あなた=${HAND_NAMES[h.player]} → ${rText}</li>`;
   }).join('');
   container.innerHTML = `<h3>対戦履歴</h3><ul class="history-list">${items}</ul>`;
