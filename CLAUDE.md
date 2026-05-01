@@ -2,54 +2,37 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Overview
+# 全般
+### 許可なく実施してよいこと
+- claude.mdが格納されたディレクトリ以下の階層にあるファイルの編集
+- gitのcommit&push
+- mkdir
 
-This repository contains two HTML5 browser-based games:
+### ファイル編集作業を指示された場合、編集前に実施すること
+- 編集対象のローカルのファイルと、gitにcommitされている最新のファイルを比較
+- gitの最新ファイルが編集前のローカルのファイルより新しければ、gitの最新ファイルをpull
+- 編集前のローカルのファイルのほうがgitの最新のものより新しければ、またはgitに存在しなければ、gitにcommit&push
 
-1. **Solitaire** (`solitaire/`) - Klondike solitaire with drag-and-drop card movement
-2. **Breakout** (`breakout.html`) - A breakout/block-breaking game using Canvas
+### ファイル編集後に実施すること
+- 編集したファイルのgitへのcommit&push
 
-## Solitaire Game
+# 新しく作成するプロジェクト
+### 処理概要
+プレイヤーとローカルLLMがブラウザ上で対戦するじゃんけんゲームを作成する
 
-**Location:** `solitaire/` directory
+1. 画面上でスタートボタンを押すと、画面からローカルLLMに対して、「グー・チョキ・パーいずれかを出力」という指示を出す
+2. 画面上ではLLMからの返答がくるまで、「考え中」と表示される
+3. LLMから返答があった場合、その返答はまだ画面に表示せず、プレイヤーの「グー・チョキ・パー」ボタンの選択を開始する
+4. プレイヤーのボタン選択完了後、LLMからの返答を画面に表示し、勝敗と「もう一度対戦」ボタン表示する
+5. プレイヤーのボタン選択完了時、画面表示と同時進行でLLMに対して、<br>「じゃんけん結果の辞書型配列:[{LLMの出した手,プレイヤーの出した手}]をもとにグー・チョキ・パーいずれかを出力」<br>という指示を出す
+6. プレイヤーが「もう一度対戦」ボタンを押すと、2.の手順(既にLLMから返答済みの場合は3.の手順)に戻る
 
-**Files:**
-- `index.html` - Game structure and layout
-- `styles.css` - Green-themed styling with card designs
-- `game.js` - Game logic and mechanics
-
-**Architecture:**
-- `Card` class: Represents individual cards with suit, rank, and face-up state
-- `SolitaireGame` class: Manages the game state (deck, stock, waste, foundations, tableau)
-- **Foundations:** 4 piles (♥♦♣♠) where cards are built A→K by suit
-- **Tableau:** 7 columns where cards are built K→A by alternating colors
-- **Stock/Waste:** Draw pile and revealed pile
-
-**Key mechanics:**
-- Drag-and-drop using mousedown/mousemove/mouseup events
-- Cards can be moved from waste or tableau to foundations or other tableau columns
-- Win condition: all 52 cards in foundations
-
-**Build/Run:** Open `index.html` in a browser
-
-## Breakout Game
-
-**Location:** `breakout.html` (single file)
-
-**Architecture:**
-- Canvas-based rendering with `requestAnimationFrame` game loop
-- Paddle controlled by mouse or arrow keys
-- Ball physics with collision detection against blocks and paddle
-- Score tracking and lives system
-
-**Build/Run:** Open `breakout.html` in a browser
-
-## Development
-
-No build tools required. Both games are pure HTML/CSS/JavaScript and run directly in browsers.
-
-**Running:**
-- **VS Code:** Install the "Live Server" extension, right-click `index.html` or `breakout.html`, and select "Open with Live Server"
-- **Manual:** Open HTML files directly in a browser (drag-and-drop or file://)
-
-**Note on Solitaire implementation:** The `dealCards()` and `restoreStock()` methods had historical bugs (incorrect loop bounds, deck being emptied prematurely). If cards are not appearing correctly, verify these methods are functioning properly.
+### 設計概要
+- じゃんけんゲーム用の新しいディレクトリを作成
+- 必要であれば画面(frontend)と、LLMへの応答(backend)でディレクトリを分ける
+- LLMへの応答はjsでできるならファイルを分けるだけでいい
+- ローカルLLMはllama-server(http://127.0.0.1:8080/)を使用する
+- グー・チョキ・パーはG,C,Pで表現する
+- LLMに対しても「G,C,Pいずれかを出力」と指示する
+- LLMからの応答のパースもG,C,Pのいずれかの文字を受け取る前提で作成する
+- 画面上に表示する文字は、G,C,Pそれぞれに対応する結果「グー・チョキ・パー」を表示する
