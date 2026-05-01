@@ -30,17 +30,12 @@ async function queryLLM(prompt) {
     body: JSON.stringify({
       model: 'llama',
       messages: [{ role: 'user', content: prompt }],
-      temperature: 1.0,
-      max_tokens: 5,
+      temperature: 0.8,
+      max_tokens: 20,
     }),
   });
 
   const data = await response.json();
-  console.log('[debug] full response:', JSON.stringify(data, null, 2));
-  console.log('[debug] choices:', data.choices);
-  console.log('[debug] choice[0]:', data.choices ? data.choices[0] : 'no choices');
-  console.log('[debug] message:', data.choices ? data.choices[0]?.message : 'no message');
-
   const text = (data.choices?.[0]?.message?.content || '').trim();
   // Parse: extract G, C, or P from response
   const match = text.match(/[GCP]/);
