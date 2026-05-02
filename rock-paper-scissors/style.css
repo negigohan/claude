@@ -173,6 +173,23 @@ button:active {
   border-bottom: 1px solid #333;
 }
 
+/* Stats */
+.stats {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin: 1rem 0;
+  padding: 0.8rem;
+  background: #16213e;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.stat-item {
+  color: #4ecca3;
+  font-weight: bold;
+}
+
 #retry-btn {
   margin-top: 1rem;
 }

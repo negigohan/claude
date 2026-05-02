@@ -111,6 +111,7 @@ function onPlayerChoose(hand) {
 
   // Update history display
   updateHistoryDisplay();
+  updateStatsDisplay();
 
   state = 'result';
   showScreen('result');
@@ -136,6 +137,21 @@ function updateHistoryDisplay() {
     return `<li>Round ${i + 1}: LLM=${HAND_NAMES[h.llm]} vs あなた=${HAND_NAMES[h.player]} → ${rText}</li>`;
   }).join('');
   container.innerHTML = `<h3>対戦履歴</h3><ul class="history-list">${items}</ul>`;
+}
+
+function updateStatsDisplay() {
+  const container = document.getElementById('stats');
+  if (history.length === 0) {
+    container.innerHTML = '';
+    return;
+  }
+  const total = history.length;
+  const wins = history.filter(h => h.result === 'lose').length; // LLM loses = player wins
+  const winRate = (wins / total * 100).toFixed(1);
+  container.innerHTML = `
+    <span class="stat-item">対戦数: ${total}</span>
+    <span class="stat-item">勝率: ${winRate}%</span>
+  `;
 }
 
 function retryGame() {
