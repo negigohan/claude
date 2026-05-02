@@ -1,7 +1,7 @@
 const LLAMA_SERVER = 'http://127.0.0.1:8080/v1/chat/completions';
 
 const HAND_NAMES = { G: 'グー', C: 'チョキ', P: 'パー' };
-const HAND_EMOJI = { G: '✊', C: '✌', P: '🖐' };
+const HAND_EMOJI = { G: '✊️', C: '✌️', P: '🖐️' };
 
 // Game state
 let state = 'idle'; // idle | waiting_llm | choosing | result
