@@ -36,3 +36,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - LLMに対しても「G,C,Pいずれかを出力」と指示する
 - LLMからの応答のパースもG,C,Pのいずれかの文字を受け取る前提で作成する
 - 画面上に表示する文字は、G,C,Pそれぞれに対応する結果「グー・チョキ・パー」を表示する
+
+### 修正課題
+- チョキの絵文字が結果画面でだけおかしな表示になる
+- 勝敗画面に対戦数と勝率を表示したい

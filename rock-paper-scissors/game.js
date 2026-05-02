@@ -39,7 +39,7 @@ async function queryLLM(prompt) {
   console.log('[debug] message:', data.choices?.[0]?.message);
   const text = (data.choices?.[0]?.message?.content || '').trim();
   // Parse: extract G, C, or P from response
-  const match = text.match(/[GCP]/);
+  const match = text.match(/[GCP]$/);
   const hand = match ? match[0] : 'G'; // fallback to G if unparseable
   console.log('[← LLM response]', text, '→ parsed:', hand);
   return hand;
@@ -47,18 +47,20 @@ async function queryLLM(prompt) {
 
 function buildPrompt() {
   if (history.length === 0) {
-    return `じゃんけんを行う。グー(=G), チョキ(=C), パー(=P)のいずれかを完全にランダムに選び、G,C,Pの文字1つだけ出力せよ。
-じゃんけんのルール: グーはチョキに勝ち、チョキはパーに勝ち、パーはグーに勝つ
+    return `じゃんけんを行う。G, C, Pのいずれかを完全にランダムに選び、G,C,Pの文字1つだけ出力せよ。
+じゃんけんのルール: GはCに勝ち、CはPに勝ち、PはGに勝つ
 パターンを作らず、偏りなくランダムに選べ`;
   }
   const historyJson = history.map(h => ({
-    llm: HAND_NAMES[h.llm],
-    player: HAND_NAMES[h.player],
+    llm: h.llm,
+    player: h.player,
     result: h.result === 'win' ? 'WIN' : h.result === 'lose' ? 'LOSE' : 'DRAW',
   }));
-  return `じゃんけんを行う。過去の結果:${JSON.stringify(historyJson)}
-resultはあなたの視点(WIN=あなたの勝ち, LOSE=あなたの負け, DRAW=引き分け)である。
-過去にWINになった手を多用し、LOSEになった手は避け、DRAWになった手は適度に使い、G,C,Pから選び1つだけ出力せよ`;
+  return `じゃんけんを行う。
+じゃんけんのルール: GはCに勝ち、CはPに勝ち、PはGに勝つ
+過去の結果:${JSON.stringify(historyJson)}
+resultはあなた(LLM側)の視点(WIN=あなたの勝ち, LOSE=あなたの負け, DRAW=引き分け)である。
+過去の結果から次にあなたが勝つ確率が高い手をG,C,Pから選び、「G」「C」「P」のいずれか1文字だけを出力せよ`;
 }
 
 // Determine winner: returns 'win', 'lose', or 'draw' (from LLM's perspective)
